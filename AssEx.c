@@ -565,37 +565,37 @@ void lcs() {
 	//Call required algorithms
 	if (iterBool){
     printf("Iterative version\n");
-    clock_t start = clock();
     init_table(xLen, yLen);
+    clock_t start = clock();
 		answer = lcs_iterative_alg();
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     print_answer(1, 1);
     free_table();
-    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     printf("Time taken: %f seconds\n\n", (time_spent));
 	}
 	if (recNoMemoBool){
     printf("Recursive version without memoisation\n");
-    clock_t start = clock();
     if (printBool){
       init_table(xLen, yLen);
     }
+    clock_t start = clock();
 		answer = lcs_recursive_alg(xLen, yLen);
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     print_answer(1, 2);
     if (printBool){
       free_table();
     }
-    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     printf("Time taken: %f seconds\n\n", (time_spent));
     rec_counter = 0;
 	}
   if (recMemoBool){
     printf("Recursive version with memoisation\n");
-    clock_t start = clock();
     init_table(xLen, yLen);
+    clock_t start = clock();
 		answer = lcs_recursive_memo_alg(xLen, yLen);
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     print_answer(1, 3);
     free_table();
-    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     printf("Time taken: %f seconds\n\n", (time_spent));
     rec_counter = 0;
 	}
@@ -696,26 +696,27 @@ void ed(){
   //Call required algorithms
   if (iterBool){
     printf("Iterative version\n");
-    clock_t start = clock();
     init_table(xLen, yLen);
+    clock_t start = clock();
     answer = ed_iterative_alg();
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     print_answer(2, 1);
     free_table();
-    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
+
     printf("Time taken: %f seconds\n\n", (time_spent));
   }
   if (recNoMemoBool){
     printf("Recursive version without memoisation\n");
-    clock_t start = clock();
     if (printBool){
       init_table(xLen, yLen);
     }
+    clock_t start = clock();
     answer = ed_recursive_alg(xLen, yLen);
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     print_answer(2, 2);
     if (printBool){
       free_table();
     }
-    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     printf("Time taken: %f seconds\n\n", (time_spent));
     rec_counter = 0;
   }
@@ -762,12 +763,12 @@ int sw_iterative_alg(){
 void sw(){
   if (iterBool){
     printf("Iterative version\n");
-    clock_t start = clock();
     init_table(xLen, yLen);
+    clock_t start = clock();
     answer = sw_iterative_alg();
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     print_answer(3, 1);
     free_table();
-    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
     printf("Time taken: %f seconds\n\n", (time_spent));
   }
 }
