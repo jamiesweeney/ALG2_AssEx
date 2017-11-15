@@ -32,7 +32,7 @@ typedef struct {
 //table for printable table
 tableTuple **table; //2d array of tableTuples
 compTableTuple *comp_array; //1d array of compTableTuples
-int ins_count = 0; //Insertion count
+long long ins_count = 0; //Insertion count
 int answer = 0; //Final answers from algorithms
 long long rec_counter = 0; //A counter for recursive calls
 //NEW VARIABLES END
@@ -243,7 +243,7 @@ int min3(int num, int num2, int num3){
 
 //Table functions
 //Checks if index of 2-d virtually initialized array has been initialized
-bool is_real_value(int i, int j, tableTuple** table, compTableTuple* comp_array, int ins_count){
+bool is_real_value(int i, int j){
         //Get pointer value
         int a = table[i][j].pointer;
 
@@ -263,13 +263,13 @@ bool is_real_value(int i, int j, tableTuple** table, compTableTuple* comp_array,
 }
 
 //Adds to the 2-d virtually initialized array
-void add_to_table(int i, int j, int value, tableTuple** table, compTableTuple* comp_array, int *count){
+void add_to_table(int i, int j, int value){
         //Add one to insertion counter
         table[i][j].entry = value;
-        table[i][j].pointer = *count;
-        comp_array[*count].x_index = i;
-        comp_array[*count].y_index = j;
-        *count = *count + 1;
+        table[i][j].pointer = ins_count;
+        comp_array[ins_count].x_index = i;
+        comp_array[ins_count].y_index = j;
+        ins_count = ins_count + 1;
 }
 
 //Virutally Initialise a 2-d array and companion array of real insertions
@@ -357,7 +357,7 @@ void print_table(int col_width){
 
 		//Print table values
 		for (j=0; j<=yLen; j++){
-      if (is_real_value(i, j, table, comp_array, ins_count) == 0){
+      if (is_real_value(i, j) == 0){
         //If doing LCS/ED/SW table then should be -, if q table of computation counts should be 0
         if (recMemoBool){
           printf("%-*s", col_width, "-");
@@ -434,17 +434,28 @@ void print_align(){
 }
 
 //print_answer - prints out the answer to the algorithm
-void print_answer(){
-  printf("%s: %d\n", result_string, answer);
-
-  //If to print out computation information
-  if (recNoMemoBool | recMemoBool){
-    printf("Total number of times entry computed: %d\n",rec_counter);
-    if (recMemoBool){
+void print_answer(int alg, int type){
+  switch (alg){
+    case 1:
+      printf("Length of longest common subsequence is: %d\n", answer);
+      break;
+    case 2:
+      printf("Edit distance is: %d\n", answer);
+      break;
+    case 3:
+      printf("Length of a highest scoring local similarity is: %d\n", answer);
+      break;
+  }
+  switch (type){
+    case 2:
+      printf("Total number of times entry computed: %d\n",rec_counter);
+      break;
+    case 3:
+      printf("Total number of times entry computed: %d\n",rec_counter);
       long cells = (xLen*yLen);
       double prop_comp = (((double)ins_count*100)/(double)cells);
       printf("Proportion of table computed: %.1f%%\n", prop_comp);
-    }
+      break;
   }
 
   //Print out table if required
@@ -453,12 +464,12 @@ void print_answer(){
     int biggest = max3(1, answer, rec_counter);
     int col_width = floor (log10 (abs (biggest))) + 3;
     print_table(col_width);
-  }
 
-  //Print out optimal alignment if required
-  if (alg_type == LCS & (iterBool | recMemoBool) & printBool){
-    printf("\n");
-    print_align();
+    //If to print out optimal alignment
+    if (alg == 1 & type == 1){
+      printf("\n");
+      print_align();
+    }
   }
 }
 
@@ -481,7 +492,7 @@ int lcs_iterative_alg(){
 			else {
         value = max2(table[i-1][j].entry, table[i][j-1].entry);
 			}
-      add_to_table(i, j, value, table, comp_array, &ins_count);
+      add_to_table(i, j, value);
 		}
 	}
 	return table[xLen][yLen].entry;
@@ -492,8 +503,8 @@ int lcs_iterative_alg(){
 int lcs_recursive_alg(int a, int b){
   //Update table if to print
   if (printBool){
-    if (is_real_value(a, b, table, comp_array, ins_count) == 0){
-      add_to_table(a, b, 0, table, comp_array, &ins_count);
+    if (is_real_value(a, b) == 0){
+      add_to_table(a, b, 0);
     }
     table[a][b].entry = table[a][b].entry + 1;
   }
@@ -522,7 +533,7 @@ int lcs_recursive_memo_alg(int a, int b){
 	}
 	else if (x[a-1] == y[b-1]){
     //Check if value exists first
-    if (is_real_value(a-1, b-1, table, comp_array, ins_count)){
+    if (is_real_value(a-1, b-1)){
       value = 1 + table[a-1][b-1].entry;
     }else{
       value = 1 + lcs_recursive_memo_alg(a-1, b-1);
@@ -532,12 +543,12 @@ int lcs_recursive_memo_alg(int a, int b){
     //Check if values exists first
     int hor_value;
     int ver_value;
-    if (is_real_value(a-1, b, table, comp_array, ins_count)){
+    if (is_real_value(a-1, b)){
         hor_value = table[a-1][b].entry;
     }else{
       hor_value = lcs_recursive_memo_alg(a-1, b);
     }
-    if (is_real_value(a, b-1, table, comp_array, ins_count)){
+    if (is_real_value(a, b-1)){
         ver_value = table[a][b-1].entry;
     }else{
       ver_value = lcs_recursive_memo_alg(a,b-1);
@@ -545,21 +556,48 @@ int lcs_recursive_memo_alg(int a, int b){
 
 		value = max2(hor_value, ver_value);
 	}
-  add_to_table(a, b, value, table, comp_array, &ins_count);
+  add_to_table(a, b, value);
   return value;
 }
 
 //lcs - calls necessary algorithm and prints
 void lcs() {
-	//Call required algorithm
+	//Call required algorithms
 	if (iterBool){
+    printf("Iterative version\n");
+    clock_t start = clock();
+    init_table(xLen, yLen);
 		answer = lcs_iterative_alg();
+    print_answer(1, 1);
+    free_table();
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
+    printf("Time taken: %f seconds\n\n", (time_spent));
 	}
-	else if (recNoMemoBool){
+	if (recNoMemoBool){
+    printf("Recursive version without memoisation\n");
+    clock_t start = clock();
+    if (printBool){
+      init_table(xLen, yLen);
+    }
 		answer = lcs_recursive_alg(xLen, yLen);
+    print_answer(1, 2);
+    if (printBool){
+      free_table();
+    }
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
+    printf("Time taken: %f seconds\n\n", (time_spent));
+    rec_counter = 0;
 	}
-  else if (recMemoBool){
+  if (recMemoBool){
+    printf("Recursive version with memoisation\n");
+    clock_t start = clock();
+    init_table(xLen, yLen);
 		answer = lcs_recursive_memo_alg(xLen, yLen);
+    print_answer(1, 3);
+    free_table();
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
+    printf("Time taken: %f seconds\n\n", (time_spent));
+    rec_counter = 0;
 	}
 }
 
@@ -581,7 +619,7 @@ int ed_iterative_alg(){
 			else {
         value = min3(table[i-1][j].entry, table[i][j-1].entry, table[i-1][j-1].entry) + 1;
 			}
-    add_to_table(i, j, value, table, comp_array, &ins_count);
+    add_to_table(i, j, value);
 		}
 	}
 	return table[xLen][yLen].entry;
@@ -591,8 +629,8 @@ int ed_iterative_alg(){
 int ed_recursive_alg(int i, int j){
   //Update table if to print
   if (printBool){
-    if (is_real_value(i, j, table, comp_array, ins_count) == 0){
-      add_to_table(i, j, 0, table, comp_array, &ins_count);
+    if (is_real_value(i, j) == 0){
+      add_to_table(i, j, 0);
     }
     table[i][j].entry++;
   }
@@ -621,7 +659,7 @@ int ed_recursive_memo_alg(int i, int j){
 	}
 	else if (x[i-1] == y[j-1]){
     //Check if value exists first
-    if (is_real_value(i-1, j-1, table, comp_array, ins_count)){
+    if (is_real_value(i-1, j-1)){
       value = table[i-1][j-1].entry;
     }else{
       value = ed_recursive_memo_alg(i-1, j-1);
@@ -630,17 +668,17 @@ int ed_recursive_memo_alg(int i, int j){
 	else{
     //Check if values exists first
     int hor_value, ver_value, diag_value;
-    if (is_real_value(i-1, j, table, comp_array, ins_count)){
+    if (is_real_value(i-1, j)){
         hor_value = table[i-1][j].entry;
     }else{
       hor_value = ed_recursive_memo_alg(i-1, j);
     }
-    if (is_real_value(i, j-1, table, comp_array, ins_count)){
+    if (is_real_value(i, j-1)){
         ver_value = table[i][j-1].entry;
     }else{
       ver_value = ed_recursive_memo_alg(i,j-1);
     }
-    if (is_real_value(i-1, j-1, table, comp_array, ins_count)){
+    if (is_real_value(i-1, j-1)){
         diag_value = table[i-1][j-1].entry;
     }else{
       diag_value = ed_recursive_memo_alg(i-1,j-1);
@@ -649,22 +687,49 @@ int ed_recursive_memo_alg(int i, int j){
     value = min3(hor_value, ver_value, diag_value) + 1;
 
   }
-  add_to_table(i, j, value, table, comp_array, &ins_count);
+  add_to_table(i, j, value);
   return value;
 }
 
 //ed -  calls necessary algorithm and prints
 void ed(){
-  //Call required algorithm
-	if (iterBool){
-		answer = ed_iterative_alg();
-	}
-	else if (recNoMemoBool){
-		answer = ed_recursive_alg(xLen, yLen);
-	}
-  else if (recMemoBool){
-		answer = ed_recursive_memo_alg(xLen, yLen);
-	}
+  //Call required algorithms
+  if (iterBool){
+    printf("Iterative version\n");
+    clock_t start = clock();
+    init_table(xLen, yLen);
+    answer = ed_iterative_alg();
+    print_answer(2, 1);
+    free_table();
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
+    printf("Time taken: %f seconds\n\n", (time_spent));
+  }
+  if (recNoMemoBool){
+    printf("Recursive version without memoisation\n");
+    clock_t start = clock();
+    if (printBool){
+      init_table(xLen, yLen);
+    }
+    answer = ed_recursive_alg(xLen, yLen);
+    print_answer(2, 2);
+    if (printBool){
+      free_table();
+    }
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
+    printf("Time taken: %f seconds\n\n", (time_spent));
+    rec_counter = 0;
+  }
+  if (recMemoBool){
+    printf("Recursive version with memoisation\n");
+    clock_t start = clock();
+    init_table(xLen, yLen);
+    answer = ed_recursive_memo_alg(xLen, yLen);
+    print_answer(2, 3);
+    free_table();
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
+    printf("Time taken: %f seconds\n\n", (time_spent));
+    rec_counter = 0;
+  }
 }
 
 
@@ -687,7 +752,7 @@ int sw_iterative_alg(){
         value = max4((table[i-1][j].entry-1), (table[i][j-1].entry-1), (table[i-1][j-1].entry-1), 0);
       }
     max = max2(value, max);
-    add_to_table(i, j, value, table, comp_array, &ins_count);
+    add_to_table(i, j, value);
     }
   }
   return max;
@@ -695,8 +760,16 @@ int sw_iterative_alg(){
 
 //sw - calls necessary algorithms and prints
 void sw(){
-  //Call function and get returned answer
-  answer = sw_iterative_alg();
+  if (iterBool){
+    printf("Iterative version\n");
+    clock_t start = clock();
+    init_table(xLen, yLen);
+    answer = sw_iterative_alg();
+    print_answer(3, 1);
+    free_table();
+    double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
+    printf("Time taken: %f seconds\n\n", (time_spent));
+  }
 }
 
 //NEW FUNCTIONS END
@@ -715,45 +788,20 @@ int main(int argc, char *argv[]) {
 		else
 			success = readStrings(); // else read strings from file
 		if (success) { // do not proceed if file input was problematic
-			// confirm dynamic programming type
-			// these print commamds are just placeholders for now
-			if (iterBool)
-				printf("Iterative version\n");
-			if (recMemoBool && (alg_type==LCS || alg_type==ED))
-				printf("Recursive version with memoisation\n");
-			if (recNoMemoBool && (alg_type==LCS || alg_type==ED))
-				printf("Recursive version without memoisation\n");
-
       //CODE START
 
-			//Start timer
-			clock_t start = clock();
-
-      //If a table is needed, virtually initialise it
-      if (iterBool | printBool | recMemoBool){
-        init_table(xLen, yLen);
-      }
-
 			//Call the problem solution
-			if (alg_type==LCS)
+			if (alg_type==LCS){
 				//Case of Longest Common Substring algorithm
 				lcs();
-			if (alg_type==ED)
+      }
+			else if (alg_type==ED){
 				//Case of Edit Distance algorithm
 				ed();
-			if (alg_type==SW)
+      }
+			else if (alg_type==SW){
 				//Case of Highest Scoring Local Similarity algorithm
 				sw();
-
-				double time_spent = (double)(clock() - start) / CLOCKS_PER_SEC;
-				printf("Time taken: %f seconds\n", (time_spent));
-
-      //Print the answer
-      print_answer();
-
-      //Free table memory if used
-      if (iterBool | printBool | recMemoBool){
-        free_table();
       }
 
       //CODE END
